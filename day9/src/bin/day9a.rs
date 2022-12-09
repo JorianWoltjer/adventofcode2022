@@ -1,17 +1,17 @@
-use day9::{parse_input, Rope};
+use day9::{parse_input, LongRope};
 
 fn main() {
     let input = include_str!("../../input.txt");
 
     let movements = parse_input(input);
 
-    let mut rope = Rope::new();
+    let mut rope = LongRope::new(2);
 
     for (direction, amount) in movements {
         rope.move_head(&direction, amount);
     }
 
-    println!("Visited: {}", rope.visited_positions.len());
+    println!("Visited: {}", rope.tail_visited.len());
 }
 
 #[cfg(test)]
@@ -32,13 +32,13 @@ R 2";
 
         let movements = parse_input(input);
 
-        let mut rope = Rope::new();
+        let mut rope = LongRope::new(2);
 
         for (direction, amount) in movements {
             rope.move_head(&direction, amount);
         }
 
-        assert_eq!(rope.visited_positions.len(), 13);
+        assert_eq!(rope.tail_visited.len(), 13);
     }
 }
 

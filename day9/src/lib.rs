@@ -1,21 +1,34 @@
-use std::{str::FromStr, collections::{HashSet, LinkedList}};
+#![feature(linked_list_cursors)]
+
+use std::{str::FromStr, collections::{HashSet}};
 
 const DEBUG: bool = false;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Knot {
     pub x: isize,
     pub y: isize,
 }
 
 impl Knot {
-    pub fn is_in_range_of(&self, other: &Knot) -> bool {
+    pub fn new() -> Self {
+        Self { x: 0, y: 0 }
+    }
+
+    /// If other is in one of the 8 neighbouring squares
+    pub fn is_neighbouring(&self, other: &Knot) -> bool {
         self.x.abs_diff(other.x) <= 1 &&
         self.y.abs_diff(other.y) <= 1
     }
 
+    /// If self is not on the same axis as other
     pub fn needs_diagonal_move_to(&self, other: &Knot) -> bool {
         self.x != other.x && self.y != other.y
+    }
+
+    /// Returns the number of squares that need to be walked to get to other
+    pub fn distance_to(&self, other: &Knot) -> usize {
+        self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
     }
 
     pub fn move_into(&mut self, direction: &Direction) {
@@ -26,60 +39,76 @@ impl Knot {
             Direction::DOWN => self.y -= 1,
         }
     }
+
+    /// Moves into other if it is too far away
+    pub fn follow(&mut self, other: &Knot) {
+        if !self.is_neighbouring(other) {  // If not in range, needs to move
+
+            if self.distance_to(other) > 2 {  // If other is more than 2 away, step diagonally into the direction (move 1,1)
+                self.x += 1 * (other.x - self.x).signum();
+                self.y += 1 * (other.y - self.y).signum();
+            } else if self.distance_to(other) == 2 {  // If other is not in range and exactly 2 away, only step one into the direction
+                if self.x == other.x {  // If x is equal, y axis needs a step
+                    self.y += 1 * (other.y - self.y).signum();
+                } else if self.y == other.y {  // If y is equal, x axis need a step
+                    self.x += 1 * (other.x - self.x).signum();
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
-pub struct Rope {
-    head: Knot,
-    tail: Knot,
-    pub visited_positions: HashSet<(isize, isize)>,
+pub struct LongRope {
+    pieces: Vec<Knot>,
+    pub tail_visited: HashSet<(isize, isize)>,
 }
 
-impl Rope {
-    pub fn new() -> Self {
+impl LongRope {
+    pub fn new(length: usize) -> Self {
         Self {
-            head: Knot { x: 0, y: 0 },
-            tail: Knot { x: 0, y: 0 },
-            visited_positions: HashSet::new(),
-        }
-    }
-
-    pub fn update_tail(&mut self, head_direction: &Direction) {
-        if !self.tail.is_in_range_of(&self.head) {  // If not in range, needs to move
-            if self.tail.needs_diagonal_move_to(&self.head) {  // Edge case for if the movement needs to be diagonal to catch up
-                match head_direction {  // Diagonal move
-                    Direction::RIGHT | Direction::LEFT => self.tail.y = self.head.y,
-                    Direction::UP | Direction::DOWN => self.tail.x = self.head.x,
-                }
-            }
-            self.tail.move_into(head_direction);  // Do the same
+            pieces: (0..length).map(|_| Knot::new()).collect(),
+            tail_visited: HashSet::new(),
         }
     }
 
     pub fn move_head(&mut self, direction: &Direction, amount: usize) {
         if DEBUG { println!("Movement: {amount} {direction:?}"); }
-        
+
         for _ in 0..amount {
-            self.head.move_into(direction);
-            
-            self.update_tail(&direction);
-            self.visited_positions.insert((self.tail.x, self.tail.y));
+            // Move head
+            let head = self.pieces.first_mut().unwrap();
+            head.move_into(direction);
+
+            // Move tail
+            for i in 1..self.pieces.len() {
+                let prev = &self.pieces[i-1].clone();  // We have to clone here because borrow checker doesn't know we don't mutate [i-1]
+                self.pieces[i].follow(prev);
+            }
+
+            // Save position of last element for result
+            let tail = self.pieces.last().unwrap();
+            self.tail_visited.insert((tail.x, tail.y));
+
             if DEBUG { self.print(); }
         }
     }
-
-    pub fn print(&self) {
+    
+    pub fn print(&self) {  // Only for debugging
         let mut grid: Vec<Vec<char>> = Vec::new();
-        for y in 0..5 {
+        for y in -5..=15 {
             let mut row: Vec<char> = Vec::new();
-            for x in 0..6 {
-                if y == self.head.y && x == self.head.x {
+            'x_loop: for x in -11..=14 {
+                if y == self.pieces.first().unwrap().y && x == self.pieces.first().unwrap().x {
                     row.push('H');
-                } else if y == self.tail.y && x  == self.tail.x {
-                    row.push('T');
-                } else if self.visited_positions.contains(&(x, y)) {
-                    row.push('#');
                 } else {
+                    for (i, knot) in self.pieces.iter().enumerate() {
+                        if y == knot.y && x == knot.x {
+                            let c = i.to_string().chars().next().unwrap();
+                            row.push(c);
+                            continue 'x_loop;
+                        }
+                    }
                     row.push('.');
                 }
             }
@@ -91,19 +120,6 @@ impl Rope {
             println!();
         }
         println!();
-    }
-}
-
-#[derive(Debug)]
-pub struct LongRope {
-    pieces: LinkedList<Rope>,
-}
-
-impl LongRope {
-    pub fn new(length: usize) -> Self {
-        Self {
-            pieces: (0..length).map(|_| Rope::new()).collect()
-        }
     }
 }
 
@@ -142,13 +158,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_in_range() {
+    fn test_is_neighbouring() {
         let a = Knot { x: 0, y: 0 };
         let b = Knot { x: 1, y: 1 };
-        assert_eq!(a.is_in_range_of(&b), true);
+        assert_eq!(a.is_neighbouring(&b), true);
         let b = Knot { x: 1, y: 2 };
-        assert_eq!(a.is_in_range_of(&b), false);
+        assert_eq!(a.is_neighbouring(&b), false);
         let a = Knot { x: 2, y: 3 };
-        assert_eq!(a.is_in_range_of(&b), true);
+        assert_eq!(a.is_neighbouring(&b), true);
     }
 }
