@@ -1,5 +1,3 @@
-#![feature(linked_list_cursors)]
-
 use std::{str::FromStr, collections::{HashSet}};
 
 const DEBUG: bool = false;
