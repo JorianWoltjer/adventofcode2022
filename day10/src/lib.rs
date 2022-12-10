@@ -1,20 +1,28 @@
 use std::str::FromStr;
 
 pub struct CPU {
+    pub should_draw: bool,
     pub x: i64,
-    cycle: usize,
     pub results: Vec<i64>,
+    cycle: usize,
 }
 
 impl CPU {
-    pub fn new() -> Self {
-        Self { x: 1, cycle: 0, results: Vec::new() }
+    pub fn new(should_draw: bool) -> Self {
+        Self { 
+            should_draw,
+            x: 1, 
+            cycle: 0, 
+            results: Vec::new(),
+        }
     }
 
     fn cycle(&mut self) {
-        self.cycle += 1;
+        self.cycle += 1;  // Increment cycle
 
-        if (self.cycle + 20) % 40 == 0 {
+        if self.should_draw { self.draw() }  // For part B
+
+        if (self.cycle + 20) % 40 == 0 {  // For part A
             self.results.push(self.cycle as i64 * self.x);  // Save for retrieval later
         }
     }
@@ -29,8 +37,23 @@ impl CPU {
             }
         }
     }
+
+    pub fn draw(&self) {
+        let position = (self.cycle-1) % 40;
+            
+        if self.x.abs_diff(position as i64) <= 1 {  // If close enough
+            print!("#");
+        } else {
+            print!(".");
+        }
+
+        if position == 40-1 {  // New line
+            println!();
+        }
+    }
 }
 
+#[derive(Debug)]
 pub enum Instruction {
     ADDX(i64),
     NOOP,

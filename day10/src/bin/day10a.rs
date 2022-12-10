@@ -6,7 +6,7 @@ fn main() {
 
     let instructions: Vec<Instruction> = input.lines().map(|line| line.parse().unwrap()).collect();
 
-    let mut cpu = CPU::new();
+    let mut cpu = CPU::new(false);
 
     for instruction in instructions {
         cpu.execute(instruction);
@@ -29,7 +29,7 @@ addx -5";
 
         let instructions: Vec<Instruction> = input.lines().map(|line| line.parse().unwrap()).collect();
 
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(false);
 
         for instruction in instructions {
             cpu.execute(instruction);
@@ -44,7 +44,7 @@ addx -5";
 
         let instructions: Vec<Instruction> = input.lines().map(|line| line.parse().unwrap()).collect();
 
-        let mut cpu = CPU::new();
+        let mut cpu = CPU::new(false);
 
         for instruction in instructions {
             cpu.execute(instruction);
