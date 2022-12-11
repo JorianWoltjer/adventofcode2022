@@ -1,16 +1,20 @@
-use day11::{Monkey, do_round};
+use day11::{MonkeyA, do_round};
 
 fn main() {
     let input = include_str!("../../input.txt");
 
-    let mut monkeys: Vec<Monkey> = input.split("\n\n").map(|monkey| {
+    let mut monkeys: Vec<MonkeyA> = input.split("\n\n").map(|monkey| {
         let monkey = monkey.split_once("\n").unwrap().1;  // Remove first "Monkey" line
         monkey.parse().unwrap()  // Parse attributes
     }).collect();
 
+    // Calculate maximum modulo to make calculations smaller and faster
+    let wrap_around = monkeys.iter().map(|monkey| monkey.test.divisor)
+        .reduce(|accum, item| accum * item).unwrap();
+
     // Do 20 rounds
     for _ in 0..20 {
-        do_round(&mut monkeys);
+        do_round(&mut monkeys, wrap_around);
     }
 
     // Highest first
@@ -59,14 +63,18 @@ Monkey 3:
     If false: throw to monkey 1";
 
         // Parse into monkey structs
-        let mut monkeys: Vec<Monkey> = input.split("\n\n").map(|monkey| {
+        let mut monkeys: Vec<MonkeyA> = input.split("\n\n").map(|monkey| {
             let monkey = monkey.split_once("\n").unwrap().1;  // Remove first "Monkey" line
             monkey.parse().unwrap()  // Parse attributes
         }).collect();
 
+        // Calculate maximum modulo to make calculations smaller and faster
+        let wrap_around = monkeys.iter().map(|monkey| monkey.test.divisor)
+            .reduce(|accum, item| accum * item).unwrap();
+
         // Do 20 rounds
         for _ in 0..20 {
-            do_round(&mut monkeys);
+            do_round(&mut monkeys, wrap_around);
         }
 
         // Highest first

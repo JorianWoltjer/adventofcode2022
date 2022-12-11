@@ -1,37 +1,42 @@
 use std::{collections::LinkedList, str::FromStr};
 
+pub trait Monkey {
+    fn do_round(&mut self, wrap_around: i64) -> Vec<(usize, i64)>;
+    fn push_item(&mut self, item: i64);
+}
+
 #[derive(Debug)]
-pub struct Monkey {
+pub struct MonkeyA {
     pub items: LinkedList<i64>,
-    operation: Operation,
-    test: Test,
+    pub operation: Operation,
+    pub test: Test,
     pub inspected_count: usize,
 }
-impl Monkey {
-    pub fn do_round(&mut self) -> Vec<(usize, i64)> {
+impl Monkey for MonkeyA {
+    fn do_round(&mut self, _wrap_around: i64) -> Vec<(usize, i64)> {
         let mut destinations = vec![];
 
         for _ in 0..self.items.len() {
             let mut item = self.items.pop_front().unwrap();
             self.inspected_count += 1;
-            // println!("Worry level is: {item}");
 
             item = self.operation.apply(item);
-            // println!("After operation: {item}");
 
             item /= 3;
-            // println!("After bored: {item}");
 
             let new_index = self.test.test(item);
-            // println!("New index: {new_index}");
             
             destinations.push((new_index, item));
         }
 
         destinations
     }
+
+    fn push_item(&mut self, item: i64) {
+        self.items.push_back(item)
+    }
 }
-impl FromStr for Monkey {
+impl FromStr for MonkeyA {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -54,7 +59,60 @@ impl FromStr for Monkey {
 }
 
 #[derive(Debug)]
-enum Operation {
+pub struct MonkeyB {
+    pub items: LinkedList<i64>,
+    pub operation: Operation,
+    pub test: Test,
+    pub inspected_count: usize,
+}
+impl Monkey for MonkeyB {
+    fn do_round(&mut self, wrap_around: i64) -> Vec<(usize, i64)> {
+        let mut destinations = vec![];
+
+        for _ in 0..self.items.len() {
+            let mut item = self.items.pop_front().unwrap();
+            self.inspected_count += 1;
+
+            item = self.operation.apply(item);
+
+            item %= wrap_around;  // Keep it reasonably low for efficiency
+
+            let new_index = self.test.test(item);
+            
+            destinations.push((new_index, item));
+        }
+
+        destinations
+    }
+
+    fn push_item(&mut self, item: i64) {
+        self.items.push_back(item)
+    }
+}
+impl FromStr for MonkeyB {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut s = s.lines();
+
+        let items = s.next().ok_or("No starting items line found")?
+            .split("Starting items: ")
+            .last().ok_or("No starting items found")?
+            .split(", ").map(|item| item.parse().unwrap()).collect();
+
+        let operation = s.next().ok_or("No operation line found")?
+            .split("Operation: new = old ")
+            .last().ok_or("No operation found")?
+            .parse()?;
+
+        let test = Test::from_lines(s.take(3).collect())?;
+
+        Ok(Self { items, operation, test, inspected_count: 0 })
+    }
+}
+
+#[derive(Debug)]
+pub enum Operation {
     ADD(i64),  // new = old + i64
     MULTIPLY(i64),  // new = old * i64
     SQUARE,  // new = old * old
@@ -88,10 +146,10 @@ impl FromStr for Operation {
 }
 
 #[derive(Debug)]
-struct Test {
-    divisor: i64,
-    if_true: usize,  // Index
-    if_false: usize,  // Index
+pub struct Test {
+    pub divisor: i64,
+    pub if_true: usize,  // Index
+    pub if_false: usize,  // Index
 }
 
 impl Test {
@@ -124,14 +182,14 @@ impl Test {
     }
 }
 
-pub fn do_round(monkeys: &mut Vec<Monkey>) {
+pub fn do_round<T: Monkey>(monkeys: &mut Vec<T>, wrap_around: i64) {
     for i in 0..monkeys.len() {
         // println!("=== Monkey {i} ===");
         let monkey = &mut monkeys[i];
-        let destinations = monkey.do_round();
+        let destinations = monkey.do_round(wrap_around);
 
         for dest in destinations {  // Move items to corresponding other monkeys
-            monkeys[dest.0].items.push_back(dest.1);
+            monkeys[dest.0].push_item(dest.1);
         }
     }
 }
