@@ -5,7 +5,7 @@ fn main() {
 
     let hill: Hill = input.parse().unwrap();
 
-    let shortest_path = hill.find_shortest_path().unwrap();
+    let shortest_path = hill.find_shortest_path_from_start().unwrap();
     println!("Shortest path: {shortest_path}");
 }
 
@@ -24,6 +24,7 @@ abdefghi";
 
         let hill: Hill = input.parse().unwrap();
 
-        assert_eq!(hill.find_shortest_path(), Some(31));
+        let shortest_path = hill.find_shortest_path_from_start();
+        assert_eq!(shortest_path, Some(31));
     }
 }

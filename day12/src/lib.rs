@@ -1,4 +1,4 @@
-use std::{str::{FromStr}, collections::HashSet};
+use std::{str::{FromStr}, collections::{VecDeque, HashMap}};
 
 #[derive(Debug)]
 pub struct Hill {
@@ -51,69 +51,63 @@ impl FromStr for Hill {
     }
 }
 impl Hill {
-    // TODO: implement from here: https://en.wikipedia.org/wiki/Breadth-first_search
-    // TODO: for part B, simply pass all 'a' nodes as root
-    pub fn find_shortest_path(&self) -> Option<usize> {
-        let mut visited = HashSet::new();
-        let mut next_depth;
+    pub fn find_shortest_path(&self, roots: Vec<Coordinate>) -> Option<usize> {
+        let mut queue = VecDeque::from(roots.clone());
+        let mut explored: HashMap<Coordinate, usize> = HashMap::new();
 
-        visited.insert((self.start.x, self.start.y));
-        next_depth = visited.clone();
+        roots.into_iter().for_each(|root| { explored.insert(root, 0); });
 
-        for i in 1..self.width*self.height {  // Depths
-            let mut new_next_depth = HashSet::new();
-            for coord in next_depth.iter() {
-                // Find next steps
-                let steps = self.get_steps(coord.0, coord.1, &visited);
-                for step in steps {
-                    if step.0 == self.end.x && step.1 == self.end.y {  // If found end
-                        return Some(i);
-                    }
-                    visited.insert(step);
-                    new_next_depth.insert(step);
+        while !queue.is_empty() {
+            let v = queue.pop_front().unwrap();
+            if v == self.end {
+                return explored.get(&v).copied();
+            }
+            for w in self.get_steps(&v) {
+                if !explored.contains_key(&w) {
+                    explored.insert(w.clone(), explored.get(&v).unwrap() + 1);
+                    queue.push_back(w);
                 }
             }
-            next_depth = new_next_depth;
         }
 
         None
     }
 
-    fn get_steps(&self, x: usize, y: usize, visited: &HashSet<(usize, usize)>) -> Vec<(usize, usize)> {
-        let value = self.map[y][x];
+    fn get_steps(&self, start: &Coordinate) -> Vec<Coordinate> {
+        let value = self.map[start.y][start.x];
 
-        [(x as isize + 1, y as isize),
-        (x as isize - 1, y as isize),
-        (x as isize, y as isize + 1),
-        (x as isize, y as isize - 1)].iter().filter(|coord| {
+        [(start.x as isize + 1, start.y as isize),
+        (start.x as isize - 1, start.y as isize),
+        (start.x as isize, start.y as isize + 1),
+        (start.x as isize, start.y as isize - 1)].iter().filter(|coord| {
             coord.0 >= 0 && coord.1 >= 0 && coord.0 < self.width as isize && coord.1 < self.height as isize &&
-            self.map[coord.1 as usize][coord.0 as usize] <= value+1 &&
-            !visited.contains(&(coord.0 as usize, coord.1 as usize))
+            self.map[coord.1 as usize][coord.0 as usize] <= value+1
         }).map(|coord| {
-            (coord.0 as usize, coord.1 as usize)
+            Coordinate { x: coord.0 as usize, y: coord.1 as usize }
         }).collect()
     }
 
-    pub fn find_shortest_path_from_anywhere(&mut self) -> Option<usize> {
-        let mut min = None;
+    pub fn find_shortest_path_from_start(&self) -> Option<usize> {
+        let roots = Vec::from([self.start.clone()]);
+
+        self.find_shortest_path(roots)
+    }
+
+    pub fn find_shortest_path_from_anywhere(&self) -> Option<usize> {
+        let mut roots = Vec::new();
         for y in 0..self.height {
             for x in 0..self.width {
                 if self.map[y][x] == 1 {  // Start at lowest
-                    self.start = Coordinate { x, y };
-                    let score = self.find_shortest_path();
-                    // If new best
-                    if score.is_some() && (min.is_none() || score.unwrap() < min.unwrap()) {
-                        min = score;
-                    }
+                    roots.push(Coordinate { x, y });
                 }
             }
         }
 
-        min
+        self.find_shortest_path(roots)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Coordinate {
     x: usize,
     y: usize,
