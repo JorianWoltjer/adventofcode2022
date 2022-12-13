@@ -125,7 +125,7 @@ impl FromStr for Shell {
         loop {
             let mut command = match input.next() {
                 Some(command) => {
-                    println!("COMMAND: {command:?}");
+                    // println!("COMMAND: {command:?}");
                     command.split(" ")
                 }
                 None => break
@@ -134,29 +134,29 @@ impl FromStr for Shell {
             if let Some("$") = command.next() {
                 match (command.next(), command.next()) {
                     (Some("cd"), Some(directory)) => {
-                        println!("Changing directory to {directory:}");
+                        // println!("Changing directory to {directory:}");
                         shell.change_directory(directory)?;
                     }
                     (Some("ls"), None) => {
-                        println!("Reading from ls");
+                        // println!("Reading from ls");
                         loop {
                             match input.peek() {
                                 Some(peeked_item) => {
                                     let mut split_item = peeked_item.split(" ");
                                     match split_item.next() {
                                         Some("$") => {
-                                            println!("- Found another command with '$', stopping ls");
+                                            // println!("- Found another command with '$', stopping ls");
                                             break;  // Don't advance input, so next command can execute
                                         }
                                         Some("dir") => {
                                             let name = split_item.next().ok_or("No directory name found")?;
-                                            println!("- Creating directory {name:?}");
+                                            // println!("- Creating directory {name:?}");
                                             shell.create_directory(name);
                                             input.next();  // This peek was correct, so take it
                                         }
                                         Some(size) => {
                                             let name = split_item.next().ok_or("No filename found")?;
-                                            println!("- Creating file {name:?} with size {size}");
+                                            // println!("- Creating file {name:?} with size {size}");
                                             shell.create_file(
                                                 size.parse().map_err(|_| "Failed to parse size int")?,
                                                 name
