@@ -37,3 +37,22 @@ pub fn parse_input(input: &str) -> Vec<(Value, Value)> {
         (serde_json::from_str(l.next().unwrap()).unwrap(), serde_json::from_str(l.next().unwrap()).unwrap())
     }).collect()
 }
+
+pub fn get_decoder_key(list: Vec<Value>, divider1: Value, divider2: Value) -> usize {
+    assert_eq!(compare(&divider2, &divider1), Ordering::Greater);  // Make sure 2 > 1 for optimisation to work
+
+    let mut divider1_index = 1;
+    let mut divider2_index = 2;
+
+    // Count number of items that would be before divider
+    for value in list {
+        if compare(&divider1, &value) == Ordering::Greater {
+            divider1_index += 1;
+            divider2_index += 1;  // divider2 is larger than divider1, so this will always be true
+        } else if compare(&divider2, &value) == Ordering::Greater {
+            divider2_index += 1;
+        }
+    }
+
+    divider1_index * divider2_index
+}

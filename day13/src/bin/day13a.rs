@@ -52,10 +52,10 @@ mod tests {
 
         let answers = [true, true, false, true, false, true, false, false, false];
 
-        let matches = parse_input(input);
+        let pairs = parse_input(input);
 
         let mut sum = 0;
-        for (i, (left, right)) in matches.iter().enumerate() {
+        for (i, (left, right)) in pairs.iter().enumerate() {
             let answer = match compare(left, right) {
                 Ordering::Less | Ordering::Equal => true,
                 Ordering::Greater => false
