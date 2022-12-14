@@ -98,6 +98,44 @@ impl Cave {
         }
     }
 
+    pub fn drop_max_sand_floor(&mut self) -> usize {
+        let mut count = 0;
+        while self.drop_sand_floor() {  // Breaks if sand blocks start
+            count += 1;
+        }
+        count
+    }
+
+    /// For part B, sand stops at the floor at bottom+2 and returns false if the starting 500,0 is blocked
+    pub fn drop_sand_floor(&mut self) -> bool {
+        let mut sand_y = 0;
+        let mut sand_x = 500;
+
+        if self.obstacles.contains(&(sand_x, sand_y)) {  // If start blocked
+            return false;
+        }
+
+        loop {
+            if sand_y+1 >= self.area.bottom+2 {  // If sand will hit floor
+                self.obstacles.insert((sand_x, sand_y));
+                return true;
+            }
+
+            if !self.obstacles.contains(&(sand_x, sand_y+1)) {  // If square below is empty
+                sand_y += 1;
+            } else if !self.obstacles.contains(&(sand_x-1, sand_y+1)) {  // Check below + left
+                sand_y += 1;
+                sand_x -= 1;
+            } else if !self.obstacles.contains(&(sand_x+1, sand_y+1)) {  // Check below + right
+                sand_y += 1;
+                sand_x += 1;
+            } else {  // No more space
+                self.obstacles.insert((sand_x, sand_y));
+                return true;
+            }
+        }
+    }
+
     pub fn print(&self) {
         for y in self.area.top..=self.area.bottom {
             for x in self.area.left..=self.area.right {

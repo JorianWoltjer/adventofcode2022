@@ -2,7 +2,6 @@ use day14::Cave;
 
 fn main() {
     let input = include_str!("../../input.txt");
-
     let mut cave = Cave::from_str(input).unwrap();
 
     let count = cave.drop_max_sand();
@@ -30,4 +29,3 @@ mod tests {
         assert_eq!(count, 24);
     }
 }
-
