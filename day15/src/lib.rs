@@ -84,7 +84,8 @@ pub fn print_sensors(sensors: Vec<Sensor>) {
     }
 }
 
-pub fn calculate_for_y(sensors: Vec<Sensor>, y: isize) -> usize {
+/// For part A, calculates the number of filled squares in a certain row
+pub fn calculate_for_y(sensors: &Vec<Sensor>, y: isize) -> usize {
     let mut ranges = CombinedRanges::new();
 
     for sensor in sensors {
@@ -97,6 +98,29 @@ pub fn calculate_for_y(sensors: Vec<Sensor>, y: isize) -> usize {
 
     ranges.reduce();
     ranges.total_size()
+}
+
+/// For part B, reduces ranges for row and returns Some(x, y) when it found a hole
+pub fn find_hole(sensors: &Vec<Sensor>, y: isize) -> Option<(isize, isize)> {
+    let mut ranges = CombinedRanges::new();
+
+    for sensor in sensors {
+        let overlap = sensor.distance as isize - sensor.y.abs_diff(y) as isize;  // y difference is falloff
+
+        if overlap >= 0 {
+            ranges.add(sensor.x-overlap..=sensor.x+overlap);
+        }
+    }
+
+    ranges.reduce();
+
+    if ranges.ranges.len() > 1 {
+        let x = min(ranges.ranges[0].end(), ranges.ranges[1].end()) + 1;
+
+        return Some((x, y));
+    }
+
+    None
 }
 
 #[derive(Debug)]
@@ -124,10 +148,10 @@ impl CombinedRanges {
                 for compared_range in &self.ranges {
                     if range == compared_range { continue; }
                     
-                    if compared_range.contains(&range_start) {
+                    if compared_range.contains(&(range_start-1)) {
                         range_start = *compared_range.start();
                     }
-                    if compared_range.contains(&range_end) {
+                    if compared_range.contains(&(range_end+1)) {
                         range_end = *compared_range.end();
                     }
                 }

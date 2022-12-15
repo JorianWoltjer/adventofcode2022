@@ -5,7 +5,7 @@ fn main() {
 
     let sensors: Vec<Sensor> = input.lines().map(|line| line.parse().unwrap()).collect();
 
-    let positions = calculate_for_y(sensors, 2_000_000);
+    let positions = calculate_for_y(&sensors, 2_000_000);
     println!("Positions: {positions}");
 }
 
@@ -33,7 +33,7 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3";
 
         let sensors: Vec<Sensor> = input.lines().map(|line| line.parse().unwrap()).collect();
 
-        let positions = calculate_for_y(sensors, 10);
+        let positions = calculate_for_y(&sensors, 10);
         assert_eq!(positions, 26);
     }
 }
