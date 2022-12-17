@@ -1,3 +1,5 @@
+#![feature(hash_drain_filter)]
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -80,24 +82,41 @@ impl Cave {
             }
         }
 
+        // Filter out rates of 0
+        explored.drain_filter(|valve, _distance| {
+            self.valves.get(valve).unwrap().flow_rate == 0
+        });
         let root = self.valves.get_mut(valve).unwrap();
         root.distances = explored;
     }
 
     pub fn find_highest_score(&self) -> usize {
-        // TODO: might need to change this slightly to not force open start valve
-        let closed_valves = HashSet::from_iter(self.valves.keys().cloned());
-        self.recursive_highest_score(self.start.clone(), closed_valves, 0, 0, 30)
+        let start = self.start.clone();
+        let start_valve = self.valves.get(&start).unwrap();
+        let closed_valves = HashSet::from_iter(start_valve.distances.keys().cloned());
+
+        let (total, rate, time) = (0, 0, 30);
+
+        // First round
+        closed_valves.iter().map(|valve| {
+            let time_passed = *start_valve.distances.get(valve).unwrap() + 1;
+            let time = time - time_passed as isize;
+            // let total = total + rate * time_passed;
+            self.recursive_highest_score(valve.clone(), closed_valves.clone(), total, rate, time, 0)
+        }).max().unwrap()
     }
 
-    // TODO: Fix: somehow creates random values, maybe from hashmap order. 
-    fn recursive_highest_score(&self, current: String, mut closed_valves: HashSet<String>, mut total: usize, mut rate: usize, time: isize) -> usize {
+    fn recursive_highest_score(&self, current: String, mut closed_valves: HashSet<String>, mut total: usize, mut rate: usize, time: isize, depth: usize) -> usize {
         if time <= 0 {
             total -= rate * time.abs() as usize;  // Back to zero
-            return total;  // TODO: Calculate and keep track of rate + total, then check here how far over time it is
+            return total;
         } else if closed_valves.len() <= 1 {
+            // Add to rate one last time
+            let current_valve = self.valves.get(&current).unwrap();
+            rate += current_valve.flow_rate;
+
             total += rate * time as usize;  // Predict for future (at max rate)
-            return total;  // TODO: Calculate with the current total, rate and time to predict what the end value will be
+            return total;
         }
 
         let current_valve = self.valves.get(&current).unwrap();
@@ -109,7 +128,7 @@ impl Cave {
             let time_passed = *current_valve.distances.get(valve).unwrap() + 1;
             let time = time - time_passed as isize;
             let total = total + rate * time_passed;
-            self.recursive_highest_score(valve.clone(), closed_valves.clone(), total, rate, time)
+            self.recursive_highest_score(valve.clone(), closed_valves.clone(), total, rate, time, depth+1)
         }).max().unwrap()
     }
 }
