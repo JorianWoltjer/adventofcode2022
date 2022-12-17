@@ -136,7 +136,7 @@ impl CombinedRanges {
         self.ranges.push(new_range);
     }
 
-    /// Remove all overlapping ranges
+    /// Combine all overlapping ranges
     pub fn reduce(&mut self) {
         loop {
             let len_before = self.ranges.len();
