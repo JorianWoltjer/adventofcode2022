@@ -42,8 +42,7 @@ impl FromStr for Cave {
     }
 }
 impl Cave {
-    /* 
-    ! IDEA !
+    /* IDEA
     - Save distance_to cache FAST (precomputed)
     - only consider rate>0 as nodes, others just make the path cost more
         - edge case: AA is a node with rate=0
@@ -54,6 +53,7 @@ impl Cave {
         - Score is calculated at end condition when time<=0
             - Needs a bit of calculation to get the correct score if it went multiple past the timer
     */
+    
     fn calculate_distances(&mut self) {
         let valves: Vec<String> = self.valves.keys().cloned().collect();
         for valve in valves {

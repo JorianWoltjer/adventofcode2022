@@ -51,6 +51,7 @@ impl FromStr for Hill {
     }
 }
 impl Hill {
+    /// Breadth first search
     pub fn find_shortest_path(&self, roots: Vec<Coordinate>) -> Option<usize> {
         let mut queue = VecDeque::from(roots.clone());
         let mut explored: HashMap<Coordinate, usize> = HashMap::new();
@@ -59,9 +60,12 @@ impl Hill {
 
         while !queue.is_empty() {
             let v = queue.pop_front().unwrap();
-            if v == self.end {
+
+            if v == self.end {  // End condition
                 return explored.get(&v).copied();
             }
+            
+            // Push neighbors to queue
             for w in self.get_steps(&v) {
                 if !explored.contains_key(&w) {
                     explored.insert(w.clone(), explored.get(&v).unwrap() + 1);

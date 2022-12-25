@@ -11,7 +11,7 @@ impl FromStr for SNAFU {
         let len = s.len();
         
         for (i, c) in s.chars().enumerate() {  // Left to right (biggest first)
-            let power = 5_isize.pow((len-1 - i) as u32);
+            let power_value = 5_isize.pow((len-1 - i) as u32);
             let digit = match c {
                 '2' => 2,
                 '1' => 1,
@@ -21,7 +21,7 @@ impl FromStr for SNAFU {
                 other => { return Err(format!("{other:?} is not a valid SNAFU digit")) }
             };
 
-            value += digit * power;
+            value += digit * power_value;
         }
 
         Ok(Self(value))
