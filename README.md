@@ -10,6 +10,8 @@ In the end there were only 5/50 puzzles that I **missed**:
 
 I know that if I want to complete all the challenges next year, I'll need to learn more about [Depth-first search](https://en.wikipedia.org/wiki/Depth-first_search) and how to optimize it. I also realized that the [Breadth-first search](https://en.wikipedia.org/wiki/Breadth-first_search) algorithm is very important to know well, as I used it in quite a few solutions. Other than that, it was pretty successful for only having started with Rust a few months ago. 
 
+As the puzzles got harder each day, I eventually started making drawings for a few ([15](day15/), [16](day16/), [18](day18/), [21](day21/), [22](day22/)) to test ideas visually instead of trying to imagine it. In some days you'll see a **drawing** that makes the puzzle or idea more understandable. 
+
 ## Highlights
 
 Some of my most clean and favorite solutions:
